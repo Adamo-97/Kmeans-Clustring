@@ -1,17 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
-/* Function implemented in kmeans.c */
-void greet_from_kmeans(void);
 
-int main(void) {
+void readData(char* filename);
+void freeData();
+void kmeansImplementation(int k);
 
-    // here we will have to read the 2d data points from a file
+int main(int argc, char** argv) {
 
-    // parameter intake for k prompt he user or seed a random nr 1 < k < n
+    if (argc != 3) {
+        printf("Error! Usage: ./kmeans <data-file-name> <number-of-centroids>");
+        exit(0);
+    }
 
+    int k = atoi(argv[2]);
 
-    int* nr = malloc(sizeof(int));
-    printf("Hello from main.c 👋\n");
-    greet_from_kmeans();
+    readData(argv[1]);
+
+    kmeansImplementation(k);
+
+    freeData();
     return 0;
 }
