@@ -1,32 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
-// Declaration of the DataPoint struct
-struct DataPoint{
-    float x;
-    float y;
-};
-
-static struct DataPoint* dataPoints = NULL;
-static int numDataPoints = 0;
-
+double (*dataMatrix)[2] = NULL;
+int numDataPoints = 0;          
 
 void readData(char* filename) {
-    FILE* dataFile = fopen("kmeans-data.txt", "r");
+    FILE* dataFile = fopen(filename, "r");
     if (!dataFile) {
-        printf("Failed to open kmeans-data.txt");
-        exit(0);
+        printf("Failed to open %s\n", filename);
+        exit(1);
     }
 
-    float x, y;
-    while (fscanf(dataFile, "%f %f", &x, &y) == 2) {
-        struct DataPoint* dp = realloc(dataPoints, (numDataPoints + 1) * sizeof(struct DataPoint)); // grow array by 1
-    
-        if(!dp) {perror("realloc"); break;}
-        dataPoints = dp;
+    double x, y;
+    while (fscanf(dataFile, "%lf %lf", &x, &y) == 2) {
+        // grow array by 1 row
+        double (*tmp)[2] = realloc(dataMatrix, (numDataPoints + 1) * sizeof *dataMatrix);
+        if (!tmp) { 
+            perror("realloc"); 
+            break; 
+        }
+        dataMatrix = tmp;
 
-        dataPoints[numDataPoints].x = x;
-        dataPoints[numDataPoints].y=y;
+        // store values
+        dataMatrix[numDataPoints][0] = x;
+        dataMatrix[numDataPoints][1] = y;
+
+        printf("%lf %lf\n", dataMatrix[numDataPoints][0], dataMatrix[numDataPoints][1]);
+
         numDataPoints++;
     }
 
@@ -35,13 +36,27 @@ void readData(char* filename) {
 }
 
 void kmeansImplementation(int k) {
+    int kook[k];
+    int count = 0;
+    srand(time(NULL));
 
-    for (int i = 0; i < k; i++) {
-        int r = rand() & 1798;
-        printf("current centroid: %d", r);
+    while (count < k) {
+        int r = rand() % numDataPoints;
+
+        int dup = 0;
+        for (int j = 0; j < count; j++) {
+            if (r == kook[j]) {
+                dup = 1;
+                break;
+            }
+        }
+
+        if (!dup) {
+            kook[count] = r;
+            printf("centroid %d: %d\n", count, r);
+            count++;
+        }
     }
-
-    
 }
 
 
@@ -58,10 +73,3 @@ void kmeansImplementation(int k) {
 // 2. one cluster with no points assigned, we can reinitialize it randomly
 // 3. convergence criteria, max iterations or centroids not changing significantly
 // 4. performance considerations for large datasets, maybe use kd-trees or ball-trees for nearest neighbor search
-
-
-void freeData(void){
-    free(dataPoints);
-    dataPoints = NULL;
-    numDataPoints =0;
-}
