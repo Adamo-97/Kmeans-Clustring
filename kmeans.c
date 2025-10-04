@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 // dynamic 2D array for data points "all of them will be stored here"
 double (*dataMatrix)[2];
@@ -177,18 +178,44 @@ FAIL:
     if(dataMatrix) cleanup();
     exit(1);
 }
+/*
+    Function to compute Euclidean distance between two data points by index
+    - uses the global dataMatrix[numDataPoints][2] (x,y)
+    - validates preconditions (matrix allocated, indices in range)
+    - returns the non-negative distance as a double
+    - on invalid input/state, prints an error, cleans up, and exits(1)
+*/
+double euclideanDistanceByIndex(int indexFirst, int indexSecond) {
+    if (!dataMatrix || numDataPoints <= 0) {
+        fprintf(stderr, "euclideanDistanceByIndex: dataMatrix is not initialized.\n");
+        goto FAIL;
+    }
+    if (indexFirst < 0 || indexFirst >= numDataPoints ||
+        indexSecond < 0 || indexSecond >= numDataPoints) {
+        fprintf(stderr,
+                "euclideanDistanceByIndex: index out of range (got %d, %d; valid 0..%d).\n",
+                indexFirst, indexSecond, numDataPoints - 1);
+        goto FAIL;
+    }
+
+    double deltaX = dataMatrix[indexFirst][0] - dataMatrix[indexSecond][0];
+    double deltaY = dataMatrix[indexFirst][1] - dataMatrix[indexSecond][1];
+    return sqrt(deltaX * deltaX + deltaY * deltaY);
+
+FAIL:
+    if (dataMatrix) cleanup();
+    exit(1);
+}
 
 /* K-means clustering implementation */
 void kmeansImplementation(char* dataFileName, int numClusters) {
 
-    int* userCentroids = NULL;
     int* finalCentroids = NULL;
     
     readData(dataFileName);
     if(numClusters <= 0 || numClusters > numDataPoints) goto FAIL;
 
-    userCentroids = askUserForIndexes(numClusters);
-    finalCentroids = initializeCentroids(numClusters, userCentroids);
+    finalCentroids = initializeCentroids(numClusters, askUserForIndexes(numClusters));
 
     // For demonstration delete later
     printf("Initial centroid positions (indexes):\n");
@@ -198,16 +225,35 @@ void kmeansImplementation(char* dataFileName, int numClusters) {
                dataMatrix[finalCentroids[i]][0], 
                dataMatrix[finalCentroids[i]][1]);
     }
+    printf("\nEuclidean distances between centroids:\n");
+    for (int i = 0; i < numClusters; i++) {
+        for (int j = i + 1; j < numClusters; j++) {
+            double dist = euclideanDistanceByIndex(finalCentroids[i], finalCentroids[j]);
+            printf("Distance between Centroid %d and Centroid %d: %.4lf\n", 
+                   i, j, dist);
+        }
+    }
+    printf("\nTotal data points: %d\n", numDataPoints);
+    printf("Total clusters: %d\n", numClusters);
+    printf("Centroid indexes: ");
+    for (int i = 0; i < numClusters; i++) {
+        printf("%d ", finalCentroids[i]);
+    }
+    printf("\n");
+    printf("Centroid coordinates:\n");
+    for (int i = 0; i < numClusters; i++) {
+        printf("Centroid %d: (%.2lf, %.2lf)\n", 
+               i, dataMatrix[finalCentroids[i]][0], dataMatrix[finalCentroids[i]][1]);
+    }
+    printf("\n");
     // end of demonstration
 
     // Free allocated memory and clean up "måste fillas på med resten av kmeans"
-    if (userCentroids) free(userCentroids);
     if (finalCentroids) free(finalCentroids);
     if (dataMatrix) cleanup();
     return;
 FAIL:
     fprintf(stderr, "KMEANS: nr of clusters is invalid\n");
-    if (userCentroids) free(userCentroids);
     if (finalCentroids) free(finalCentroids);
     if (dataMatrix) cleanup();
     exit(1);

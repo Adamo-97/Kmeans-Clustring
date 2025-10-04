@@ -14,6 +14,7 @@ CSTD    = -std=c99
 WARN    = -Wall -Wextra
 SRC     = main.c kmeans.c
 OBJ     = $(SRC:.c=.o)
+LDLIBS = -lm
 
 CFLAGS_R = $(WARN) $(CSTD) -O2
 CFLAGS_D = $(WARN) $(CSTD) -O0 -g
@@ -25,7 +26,7 @@ debug: clean
 	$(MAKE) CFLAGS="$(CFLAGS_D)" kmeans
 
 kmeans: $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDLIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
