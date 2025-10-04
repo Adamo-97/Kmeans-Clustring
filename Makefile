@@ -1,44 +1,42 @@
-# Compiler + flags
+# =============================================================================
+# Usage:
+#   make                     	# build optimized release: ./kmeans
+#   make debug               	# build debug (no opts, symbols): ./kmeans
+#   make vg ARGS="file.txt 3"	# run under Valgrind (use current build)
+#
+# Notes:
+#   - 'make debug' overwrites ./kmeans with a debug build.
+#   - Valgrind mode is fully interactive (no stdin piping).
+# =============================================================================
+
 CC      = gcc
 CSTD    = -std=c99
 WARN    = -Wall -Wextra
-OPT_R   = -O2
-OPT_D   = -O0 -g            # debug: no optimizations + symbols
-LDLIBS  =                   # add -lm later for your real code
-
-# Files
 SRC     = main.c kmeans.c
 OBJ     = $(SRC:.c=.o)
 
-# Default build: release
+CFLAGS_R = $(WARN) $(CSTD) -O2
+CFLAGS_D = $(WARN) $(CSTD) -O0 -g
+
+all: CFLAGS = $(CFLAGS_R)
 all: kmeans
 
-# Release target (optimized)
-CFLAGS_R = $(WARN) $(CSTD) $(OPT_R)
+debug: clean
+	$(MAKE) CFLAGS="$(CFLAGS_D)" kmeans
+
 kmeans: $(OBJ)
-	$(CC) $(CFLAGS_R) -o $@ $(OBJ) $(LDLIBS)
+	$(CC) $(CFLAGS) -o $@ $(OBJ)
 
-# Debug target (symbols, no opts)
-CFLAGS_D = $(WARN) $(CSTD) $(OPT_D)
-kmeans-debug: clean
-	$(MAKE) CFLAGS="$(CFLAGS_D)" LDFLAGS="" build-debug
-
-build-debug: $(OBJ)
-	$(CC) $(CFLAGS) -o kmeans $^ $(LDLIBS)
-
-# Pattern rule: object compilation picks up CFLAGS from context
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Convenience
-run: kmeans
-	./kmeans
-
-valgrind: kmeans
-	valgrind --leak-check=yes ./kmeans
+VGFLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes \
+          --errors-for-leak-kinds=all --num-callers=30
+ARGS ?=
+vg: kmeans
+	valgrind $(VGFLAGS) ./kmeans $(ARGS)
 
 clean:
 	rm -f kmeans *.o
-	rm -f kmeans-output.txt
 
-.PHONY: all kmeans-debug build-debug run clean
+.PHONY: all debug vg clean
