@@ -39,5 +39,6 @@ valgrind: kmeans
 
 clean:
 	rm -f kmeans *.o
+	rm -f kmeans-output.txt
 
 .PHONY: all kmeans-debug build-debug run clean
