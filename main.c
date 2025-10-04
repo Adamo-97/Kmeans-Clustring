@@ -1,28 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
 
-void readData(char* filename);
-void kmeansImplementation(int k);
+void kmeansImplementation(char* dataFileName, int numClusters);
 
 int main(int argc, char** argv) {
-
     if (argc != 3) {
-        printf("Error! Usage: ./kmeans <data-file-name> <number-of-clusters>");
-        exit(0);
+        printf("Error! Usage: ./kmeans <data-file-name> <number-of-clusters>\n");
+        return 1;
     }
 
-    // char choice;
+    errno = 0;
+    char *end = NULL;
+    long numClusters =  strtol(argv[2], &end, 10);            
 
-    // printf("Would you like to assign the initial centroid positions? (Y/N)")
-    // scanf("%c", choice);
+    if (end == argv[2] || *end != '\0' || errno == ERANGE ||
+        numClusters < 0 || numClusters > INT_MAX) {
+        fprintf(stderr, "Error: <number-of-clusters> must be a non-negative integer.\n");
+        return 1;
+    }
 
-    // if (choice == "Y" || choice == "y") {
-    //     printf("")
-    // }
-
-    int k = atoi(argv[2]);
-
-    readData(argv[1]);
-    kmeansImplementation(k);
+    kmeansImplementation(argv[1], (int)numClusters);  
     return 0;
 }
