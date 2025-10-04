@@ -1,3 +1,4 @@
 kmeans.o
 main.o
 kmeans
+kmeans-output.txt
